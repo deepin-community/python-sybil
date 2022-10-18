@@ -1,0 +1,41 @@
+From: Andrey Rahmatullin <wrar@debian.org>
+Date: Sun, 4 Aug 2019 22:38:47 +0500
+Subject: Use local intersphinx files.
+
+---
+ docs/conf.py | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/docs/conf.py b/docs/conf.py
+index d29d472..77d1156 100644
+--- a/docs/conf.py
++++ b/docs/conf.py
+@@ -1,12 +1,23 @@
+ # -*- coding: utf-8 -*-
+-import os, pkg_resources, datetime, time
++import os, pkg_resources, datetime, time, sys
+ 
+ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+ 
+-intersphinx_mapping = {
+-    'https://docs.python.org/3/': None,
+-    'http://www.sphinx-doc.org/en/stable/': None,
+-}
++def check_object_path(key, url, path):
++    if os.path.isfile(path):
++        return {key: (url, path)}
++    return {}
++
++intersphinx_mapping = {}
++intersphinx_mapping.update(
++    check_object_path('python',
++                      'https://docs.python.org/3/',
++                      '/usr/share/doc/python%d.%d/html/objects.inv' % \
++                       sys.version_info[:2]))
++intersphinx_mapping.update(
++    check_object_path('sphinx',
++                      'http://www.sphinx-doc.org/en/master/',
++                      '/usr/share/doc/sphinx-doc/html/objects.inv'))
+ 
+ extensions = [
+     'sphinx.ext.autodoc',

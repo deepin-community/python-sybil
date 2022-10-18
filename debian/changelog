@@ -1,0 +1,73 @@
+python-sybil (2.0.1-2) unstable; urgency=medium
+
+  * Update the upstream URL in d/{control,copyright,watch}.
+  * Remove external image links from README.rst.
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Wed, 13 Oct 2021 21:26:37 +0500
+
+python-sybil (2.0.1-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Apply multi-arch hints.
+    + python-sybil-doc: Add Multi-Arch: foreign.
+
+  [ Andrey Rahmatullin ]
+  * New upstream version.
+  * Switch debian/watch to github tarballs.
+  * Bump Standards-Version to 4.6.0.
+  * Drop no longer needed B-D: python3-nose.
+  * Also run docs tests at the build time.
+  * Add autopkgtests.
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Thu, 19 Aug 2021 00:33:22 +0500
+
+python-sybil (1.4.0-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+  [ Ondřej Nový ]
+  * d/control: Update Maintainer field with new Debian Python Team
+    contact address.
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Andrey Rahmatullin ]
+  * New upstream version
+    + makes the docs build reproducible (Closes: #944782).
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Fri, 13 Nov 2020 22:39:15 +0500
+
+python-sybil (1.3.1-1) unstable; urgency=medium
+
+  * New upstream version.
+    + Support for pytest 6.0.
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Wed, 29 Jul 2020 15:58:17 +0500
+
+python-sybil (1.3.0-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Switch to the debhelper compat level 13.
+  * Switch from dh --with=* to B-D: dh-sequence-*
+  * Bump Standards-Version to 4.5.0.
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Sun, 26 Jul 2020 15:47:15 +0500
+
+python-sybil (1.2.0-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * Bump Standards-Version to 4.4.1.
+
+  [ Andrey Rahmatullin ]
+  * Upload to unstable.
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Mon, 11 Nov 2019 15:09:11 +0500
+
+python-sybil (1.2.0-1~exp1) experimental; urgency=medium
+
+  * Initial release. (Closes: #915219)
+  * Upload to experimental.
+
+ -- Andrey Rahmatullin <wrar@debian.org>  Wed, 07 Aug 2019 00:35:11 +0500
