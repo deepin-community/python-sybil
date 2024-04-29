@@ -1,2 +1,12 @@
 from .sybil import Sybil
-from .region import Region
+from .document import Document
+from .region import Region, Lexeme
+from .example import Example
+
+__all__ = [
+    'Sybil',
+    'Document',
+    'Region',
+    'Lexeme',
+    'Example',
+]

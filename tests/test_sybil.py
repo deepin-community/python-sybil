@@ -1,17 +1,18 @@
 from __future__ import print_function
 
-import os
 import re
 from functools import partial
 from os.path import split
+from pathlib import Path
 
 import pytest
+from testfixtures import compare
 
 from sybil import Sybil, Region
-from sybil.document import Document
+from sybil.document import Document, PythonDocument
 from sybil.example import Example, SybilFailure
 
-from .helpers import sample_path
+from .helpers import sample_path, write_doctest
 
 
 @pytest.fixture()
@@ -19,14 +20,52 @@ def document():
     return Document('ABCDEFGH', '/the/path')
 
 
-class TestRegion(object):
+class TestRegion:
 
-    def test_repr(self):
-        region = Region(0, 1, 'parsed', 'evaluator')
-        assert repr(region) == "<Region start=0 end=1 'evaluator'>"
+    def test_repr_with_evaluator(self):
+        region = Region(0, 1, parsed='parsed', evaluator='evaluator')
+        compare(
+            repr(region),
+            expected=(
+                "<Region start=0 end=1 evaluator='evaluator'><Parsed>'parsed'</Parsed></Region>"
+            )
+        )
+
+    def test_repr_with_lexemes(self):
+        compare(
+            str(Region(36, 56, lexemes={
+                'language': 'python',
+                'foo': None,
+                'source': 'A'+'X'*1000+'Z',
+                'bar': {},
+                'baz': {f'a{i}': 'b' for i in range(11)},
+            })),
+            expected="<Region start=36 end=56>\n"
+                     "language: 'python'\n"
+                     "foo: None\n"
+                     "source: 'AXXXXXXXXXXXXXXXXXXXX...XXXXXXXXXXXXXXXXXXXXZ'\n"
+                     "bar: {}\n"
+                     "baz: {'a0': 'b', 'a1': 'b', 'a2': 'b', 'a3': 'b', "
+                     "'a4': 'b', 'a5': 'b', 'a6': 'b', 'a7': 'b', 'a8': 'b', 'a9': 'b', "
+                     "'a10': 'b'}\n"
+                     "</Region>"
+        )
+
+    def test_repr_with_parsed(self):
+        compare(
+            str(Region(36, 56, parsed={
+                'language': 'python',
+                'foo': None,
+                'source': 'X'*1000,
+                'bar': {},
+                'baz': {f'a{i}': 'b' for i in range(11)},
+            })),
+            expected="<Region start=36 end=56><Parsed>{'language': 'python'"
+                     "...9': 'b', 'a10': 'b'}}</Parsed></Region>"
+        )
 
 
-class TestExample(object):
+class TestExample:
 
     def test_repr(self, document):
         region = Region(0, 1, 'parsed', 'evaluator')
@@ -68,7 +107,7 @@ class TestExample(object):
         assert str(excinfo.value) == 'foo!'
 
 
-class TestDocument(object):
+class TestDocument:
 
     def test_add(self, document):
         region = Region(0, 1, None, None)
@@ -103,7 +142,7 @@ class TestDocument(object):
         with pytest.raises(ValueError) as excinfo:
             document.add(region)
         assert str(excinfo.value) == (
-            '<Region start=-1 end=0 None> '
+            '<Region start=-1 end=0> '
             'from line 1, column 0 to line 1, column 1 '
             'is before start of document'
         )
@@ -113,7 +152,7 @@ class TestDocument(object):
         with pytest.raises(ValueError) as excinfo:
             document.add(region)
         assert str(excinfo.value) == (
-            '<Region start=8 end=9 None> '
+            '<Region start=8 end=9> '
             'from line 1, column 9 to line 1, column 10 '
             'goes beyond end of document'
         )
@@ -125,10 +164,36 @@ class TestDocument(object):
         with pytest.raises(ValueError) as excinfo:
             document.add(region2)
         assert str(excinfo.value) == (
-            '<Region start=0 end=2 None>'
+            '<Region start=0 end=2>'
             ' from line 1, column 1 to line 1, column 3 overlaps '
-            '<Region start=1 end=3 None>'
+            '<Region start=1 end=3>'
             ' from line 1, column 2 to line 1, column 4'
+        )
+
+    def test_add_at_same_place(self, document):
+        region1 = Region(0, 2, None, None)
+        region2 = Region(0, 3, None, None)
+        document.add(region1)
+        with pytest.raises(ValueError) as excinfo:
+            document.add(region2)
+        assert str(excinfo.value) == (
+            '<Region start=0 end=3>'
+            ' from line 1, column 1 to line 1, column 4 overlaps '
+            '<Region start=0 end=2>'
+            ' from line 1, column 1 to line 1, column 3'
+        )
+
+    def test_add_identical(self, document):
+        region1 = Region(0, 2, None, None)
+        region2 = Region(0, 2, None, None)
+        document.add(region1)
+        with pytest.raises(ValueError) as excinfo:
+            document.add(region2)
+        assert str(excinfo.value) == (
+            '<Region start=0 end=2>'
+            ' from line 1, column 1 to line 1, column 3 overlaps '
+            '<Region start=0 end=2>'
+            ' from line 1, column 1 to line 1, column 3'
         )
 
     def test_add_overlaps_with_next(self, document):
@@ -140,9 +205,9 @@ class TestDocument(object):
         with pytest.raises(ValueError) as excinfo:
             document.add(region2)
         assert str(excinfo.value) == (
-            '<Region start=1 end=3 None> '
+            '<Region start=1 end=3> '
             'from line 1, column 2 to line 1, column 4 overlaps '
-            '<Region start=2 end=4 None> '
+            '<Region start=2 end=4> '
             'from line 1, column 3 to line 1, column 5'
         )
 
@@ -162,7 +227,7 @@ class TestDocument(object):
 
 
 def check(letter, parsed, namespace):
-    assert namespace == 42
+    assert namespace is None
     text, expected = parsed
     assert set(text) == {letter}
     actual = text.count(letter)
@@ -188,88 +253,73 @@ def parse_for_y(document):
                      partial(check, 'Y'))
 
 
-def parse_first_line(document):
-    line = document.text.split('\n', 1)[0]
-    yield Region(0, len(line), line, None)
+def evaluate_examples(examples):
+    return [e.region.evaluator(e.region.parsed, namespace=None)
+            for e in examples]
 
 
-class TestSybil(object):
-
-    def _evaluate_examples(self, examples, namespace):
-        return [e.region.evaluator(e.region.parsed, namespace)
-                for e in examples]
-
-    def _all_examples(self, sybil):
-        for document in sybil.all_documents():
-            for example in document:
-                yield example
+class TestSybil:
 
     def test_parse(self):
-        sybil = Sybil([parse_for_x, parse_for_y], '*')
-        document = sybil.parse(sample_path('sample1.txt'))
-        assert (self._evaluate_examples(document, 42) ==
+        sybil = Sybil([parse_for_x, parse_for_y])
+        document = sybil.parse(Path(sample_path('sample1.txt')))
+        assert (evaluate_examples(document) ==
                 ['X count was 4, as expected',
                  'Y count was 3, as expected'])
-
-    def test_all_paths(self):
-        sybil = Sybil([parse_first_line], '__init__.py')
-        assert ([e.region.parsed for e in self._all_examples(sybil)] ==
-                ['# believe it or not,'])
-
-    def test_all_paths_with_base_directory(self):
-        sybil = Sybil([parse_for_x, parse_for_y],
-                      path='./samples', pattern='*.txt')
-        assert (self._evaluate_examples(self._all_examples(sybil), 42) ==
-                ['X count was 4, as expected',
-                 'Y count was 3, as expected',
-                 'X count was 3 instead of 4',
+        document = sybil.parse(Path(sample_path('sample2.txt')))
+        assert (evaluate_examples(document) ==
+                ['X count was 3 instead of 4',
                  'Y count was 3, as expected'])
 
-    def test_explicit_encoding(self, tmp_path):
-        (tmp_path / 'encoded.txt').write_text(
-            u'X 1 check\n\xa3',
-            encoding='charmap'
-        )
-        sybil = Sybil([parse_for_x], path=str(tmp_path), pattern='*.txt',
-                      encoding='charmap')
-        assert (self._evaluate_examples(self._all_examples(sybil), 42) ==
+    def test_explicit_encoding(self, tmp_path: Path):
+        path = (tmp_path / 'encoded.txt')
+        path.write_text(u'X 1 check\n\xa3', encoding='charmap')
+        sybil = Sybil([parse_for_x], encoding='charmap')
+        document = sybil.parse(path)
+        assert (evaluate_examples(document) ==
                 ['X count was 1, as expected'])
 
+    def test_augment_document_mapping(self, tmp_path: Path):
 
-class TestFiltering(object):
+        class TextDocument(Document):
+            pass
 
-    def check(self, tmp_path, sybil, expected):
-        assert expected == [d.path[len(str(tmp_path))+1:].split(os.sep)
-                            for d in sybil.all_documents()]
+        sybil = Sybil([], document_types={'.txt': TextDocument})
+        document = sybil.parse(write_doctest(tmp_path, 'test.txt'))
+        assert type(document) is TextDocument
+        document = sybil.parse(write_doctest(tmp_path, 'test.rst'))
+        assert type(document) is Document
 
-    def test_excludes(self, tmp_path):
-        (tmp_path / 'foo.txt').write_text(u'')
-        (tmp_path / 'bar.txt').write_text(u'')
-        sybil = Sybil([], path=str(tmp_path), pattern='*.txt', excludes=['bar.txt'])
-        self.check(tmp_path, sybil, expected=[['foo.txt']])
+    def test_override_document_mapping(self):
+        sybil = Sybil([parse_for_x, parse_for_y], document_types={'.py': PythonDocument})
+        document = sybil.parse(Path(sample_path('sample1.txt')))
+        assert (evaluate_examples(document) ==
+                ['X count was 4, as expected',
+                 'Y count was 3, as expected'])
+        document = sybil.parse(Path(sample_path('comments.py')))
+        assert (evaluate_examples(document) ==
+                ['X count was 4, as expected',
+                 'Y count was 3, as expected'])
 
-    def test_filenames(self, tmp_path):
-        (tmp_path / 'foo.txt').write_text(u'')
-        (tmp_path / 'bar.txt').write_text(u'')
-        (tmp_path / 'baz').mkdir()
-        (tmp_path / 'baz' / 'bar.txt').write_text(u'')
-        sybil = Sybil([], path=str(tmp_path), filenames=['bar.txt'])
-        self.check(tmp_path, sybil, expected=[['bar.txt'], ['baz', 'bar.txt']])
+    def test_addition(self):
+        rest = Sybil([parse_for_x])
+        myst = Sybil([parse_for_y])
+        sybil = rest + myst
+        assert sybil == [rest, myst]
+        # check integrations exist:
+        assert sybil.pytest
+        assert sybil.unittest
 
-    def test_glob_patterns(self, tmp_path):
-        (tmp_path / 'middle').mkdir()
-        interesting = (tmp_path / 'middle' / 'interesting')
-        interesting.mkdir()
-        boring = (tmp_path / 'middle' / 'boring')
-        boring.mkdir()
-        (interesting / 'foo.txt').write_text(u'')
-        (boring / 'bad1.txt').write_text(u'')
-        (tmp_path / 'bad2.txt').write_text(u'')
-        sybil = Sybil([],
-                      path=str(tmp_path),
-                      pattern='**middle/*.txt',
-                      excludes=['**/boring/*.txt'])
-        self.check(tmp_path, sybil, expected=[['middle', 'interesting', 'foo.txt']])
+    def test_addition_to_collection(self):
+        rest = Sybil([parse_for_x])
+        myst = Sybil([parse_for_y])
+        bust = Sybil([parse_for_y])
+        sybil = rest + myst
+        sybil += [bust]
+        assert sybil == [rest, myst, bust]
+        # check integrations exist:
+        assert sybil.pytest
+        assert sybil.unittest
 
 
 def check_into_namespace(example):
@@ -286,13 +336,18 @@ def parse(document):
 
 
 def test_namespace(capsys):
-    sybil = Sybil([parse],
-                  path='./samples', pattern='*.txt')
-    for document in sybil.all_documents():
+    sybil = Sybil([parse], path='./samples')
+    documents = [sybil.parse(p) for p in sorted(sybil.path.glob('sample*.txt'))]
+    actual = []
+    for document in documents:
         for example in document:
-            print(split(example.document.path)[-1], example.line)
+            print(split(example.path)[-1], example.line)
             example.evaluate()
-
+            actual.append((
+                split(example.path)[-1],
+                example.line,
+                document.namespace['parsed'].copy(),
+            ))
     out, _ = capsys.readouterr()
     assert out.split('\n') == [
         'sample1.txt 1',

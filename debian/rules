@@ -4,17 +4,21 @@ export PYBUILD_NAME=sybil
 export PYBUILD_TEST_PYTEST=1
 # to test also docs, not just tests
 export PYBUILD_TEST_ARGS=
+ifeq ($(PYBUILD_AUTOPKGTEST),1)
+	# these assume the sources are present
+	export PYBUILD_TEST_ARGS+= -k "not test_all_python_files and not test_ast_docstrings"
+endif
+
 
 %:
 	dh $@ --buildsystem=pybuild
 
-override_dh_auto_build: export http_proxy=127.0.0.1:9
-override_dh_auto_build: export https_proxy=127.0.0.1:9
-override_dh_auto_build:
-	dh_auto_build
+override_dh_sphinxdoc:
 ifeq (,$(findstring nodoc,$(DEB_BUILD_PROFILES)))
-	PYTHONPATH=. python3 -m sphinx -b html -N docs/ build/html
+	python3 setup.py egg_info
+	PYTHONPATH=. python3 -m sphinx -b html -N docs/ $(CURDIR)/debian/python-sybil-doc/usr/share/doc/python3-sybil/html
 endif
+	dh_sphinxdoc
 
 override_dh_installdocs:
 	dh_installdocs -ppython-sybil-doc --doc-main-package=python3-sybil

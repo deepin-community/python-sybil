@@ -1,5 +1,5 @@
 From: Andrey Rahmatullin <wrar@debian.org>
-Date: Wed, 13 Oct 2021 21:25:58 +0500
+Date: Thu, 28 Oct 2021 20:13:08 +0500
 Subject: Remove external image links from README.rst.
 
 ---
@@ -7,7 +7,7 @@ Subject: Remove external image links from README.rst.
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/README.rst b/README.rst
-index a59b0b0..65d5a53 100644
+index 301b0ae..7a60c3b 100644
 --- a/README.rst
 +++ b/README.rst
 @@ -1,12 +1,10 @@
@@ -17,8 +17,8 @@ index a59b0b0..65d5a53 100644
 -|CircleCI|_ |Docs|_
 +CircleCI_ Docs_
  
--.. |CircleCI| image:: https://circleci.com/gh/cjw296/sybil/tree/master.svg?style=shield
- .. _CircleCI: https://circleci.com/gh/cjw296/sybil/tree/master
+-.. |CircleCI| image:: https://circleci.com/gh/simplistix/sybil/tree/master.svg?style=shield
+ .. _CircleCI: https://circleci.com/gh/simplistix/sybil/tree/master
  
 -.. |Docs| image:: https://readthedocs.org/projects/sybil/badge/?version=latest
  .. _Docs: http://sybil.readthedocs.org/en/latest/
