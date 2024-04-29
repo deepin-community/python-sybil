@@ -1,23 +1,28 @@
 Source: python-sybil
 Maintainer: Debian Python Team <team+python@tracker.debian.org>
 Uploaders:
- Andrey Rahmatullin <wrar@debian.org>
+ Andrey Rakhmatullin <wrar@debian.org>
 Section: python
 Priority: optional
 Build-Depends:
  debhelper-compat (= 13),
  dh-sequence-python3,
- dh-sequence-sphinxdoc,
+ dh-sequence-sphinxdoc <!nodoc>,
+ furo <!nodoc>,
  python3-all,
+ python3-doc <!nodoc>,
+ python3-pytest (>= 6.2.0) <!nocheck>,
+ python3-seedir <!nocheck>,
  python3-setuptools,
- python3-sphinx,
- python3-doc,
- python3-pytest (>= 4.0.0),
-Standards-Version: 4.6.0
+ python3-sphinx <!nodoc>,
+ python3-testfixtures <!nocheck>,
+ python3-yaml <!nocheck>,
+ sphinx-doc <!nodoc>,
+Standards-Version: 4.7.0
 Vcs-Browser: https://salsa.debian.org/python-team/packages/python-sybil
 Vcs-Git: https://salsa.debian.org/python-team/packages/python-sybil.git
 Homepage: https://github.com/simplistix/sybil/
-Testsuite: autopkgtest-pkg-python
+Testsuite: autopkgtest-pkg-pybuild
 Rules-Requires-Root: no
 
 Package: python3-sybil

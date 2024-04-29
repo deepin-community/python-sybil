@@ -1,9 +1,16 @@
 .. invisible-code-block: python
 
-  print('pathalogical worst case for line numbers', file=buffer)
+  raise Exception('Boom 1')
 
 More likely is one down here:
 
 .. code-block:: python
 
-  print('still should work and have good line numbers', file=buffer)
+  raise Exception('Boom 2')
+
+This will keep working but not be an effective test once PEP 563 finally lands:
+
+.. code-block:: python
+
+    def foo(x: str):
+        print(x)

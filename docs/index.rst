@@ -1,14 +1,23 @@
 .. include:: ../README.rst
+  :end-before: The `documentation
 
-Sybil is designed so that it's easy to provide your own parsers for
-your own types of example in addition to the included parsers for
-:mod:`doctest` and :rst:dir:`code-block` examples.
+Sybil comes with an array of included :ref:`parsers <parsers>`, including ones for
+:mod:`doctest` and :rst:dir:`code-block` examples, and
+is designed so that it's easy to provide your own additional parsers.
 
 .. toctree::
    :maxdepth: 3
 
+   quickstart.rst
    use.rst
-   parsers.rst
+   patterns.rst
+   ReST Parsers <rest.rst>
+   markdown.rst
+   myst.rst
+
+.. toctree::
+   :maxdepth: 1
+
    api.rst
    development.rst
    changes.rst
@@ -21,7 +30,7 @@ Sybil is heavily inspired by `Manuel`__, which was named after a
 `Fawlty Towers`__ character, and so it seemed only right to pick another
 Fawlty Towers character name for this library.
 
-__ http://pythonhosted.org/manuel/index.html
+__ https://pypi.org/project/manuel/
 
 __ https://en.wikipedia.org/wiki/Fawlty_Towers
 

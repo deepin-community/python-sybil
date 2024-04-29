@@ -1,5 +1,0 @@
-Tests: unittests
-Depends:
- python3-sybil,
- python3-all,
- python3-pytest,

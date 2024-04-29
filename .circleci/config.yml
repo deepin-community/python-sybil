@@ -1,23 +1,32 @@
 version: 2.1
 
 orbs:
-  python: cjw296/python-ci@1.2
+  python: cjw296/python-ci@4
 
 common: &common
   jobs:
 
     - python/pip-run-tests:
-        name: python27
-        image: circleci/python:2.7
-    - python/pip-run-tests:
-        name: python37
-        image: circleci/python:3.7
+        matrix:
+          parameters:
+            image:
+              - cimg/python:3.7
+              - cimg/python:3.8
+              - cimg/python:3.9
+              - cimg/python:3.11
+              - cimg/python:3.12
+            extra_packages:
+              - "'pytest>=7.1,<7.4'"
+              - "'pytest>=7.4,<8'"
+              - "'pytest'"
+
+    - python/typing:
+        packages: sybil
 
     - python/coverage:
         name: coverage
         requires:
-          - python27
-          - python37
+          - python/pip-run-tests
 
     - python/release:
         name: release
